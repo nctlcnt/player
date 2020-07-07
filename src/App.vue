@@ -1,19 +1,31 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <player @updatetimer="sendTimer"></player>
+    <lyrics v-bind:timestamp="timer"></lyrics>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Player from "./components/Player.vue";
+import Lyrics from "./components/Lyrics.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
-  }
-}
+    Player,
+    Lyrics,
+  },
+  data() {
+    return {
+      timer: 0,
+    };
+  },
+  methods: {
+    sendTimer(val) {
+      this.timer = val;
+    },
+  },
+};
 </script>
 
 <style>
