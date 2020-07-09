@@ -1,5 +1,5 @@
 <template>
-  <div class="player-view" ref="app">
+  <div class="player-view" ref="view">
     <div
       id="player"
       :style="playerStyle"
@@ -13,47 +13,55 @@
         :style="{height:coverHeight+'px',width:coverWidth+'px'}"
         alt="cover"
         class="cover"
+        @click.stop="togglePlaylist"
+        :class="{blur:show}"
       />
-      <span class="detail">{{songs[curIndex].author}} - {{songs[curIndex].title}}</span>
-      <div id="progress-container" @click="updateProgress" @mousedown.stop="startDragging">
-        <div class="progress" :style="{ width:prog+'px' }" ref="progress"></div>
-      </div>
-      <span class="now">{{ currentTime | timeformatter }}</span>
-      <span class="all">{{ duration | timeformatter}}</span>
-      <div class="button-container">
-        <button class="round prev" @click="prev"></button>
-        <button class="play" v-if="!playing" @click="play"></button>
-        <button class="stop" v-else @click="pause"></button>
-        <button class="round next" @click="next"></button>
+      <div class="control-container" v-show="!show">
+        <span class="detail">{{songs[curIndex].author}} - {{songs[curIndex].title}}</span>
+        <div id="progress-container" @click="updateProgress" @mousedown.stop="startDragging">
+          <div class="progress" :style="{ width:prog+'px' }" ref="progress"></div>
+        </div>
+        <span class="now">{{ currentTime | timeformatter }}</span>
+        <span class="all">{{ duration | timeformatter}}</span>
+        <div class="button-container">
+          <button class="round prev" @click="prev"></button>
+          <button class="play" v-if="!playing" @click="play"></button>
+          <button class="stop" v-else @click="pause"></button>
+          <button class="round next" @click="next"></button>
+        </div>
       </div>
     </div>
+    <Option
+      id="option"
+      @clickPlaylist="onPlaylistClick"
+      v-if="showPlaylist"
+      v-bind:songList="songs"
+      v-bind:current="curIndex"
+      :touching="touching"
+    ></Option>
 
-    <div id="playlist">
-      <div class="dropdown"></div>
-      <h1>Playlist</h1>
-      <ul>
-        <li
-          v-for="(song,index) in songs"
-          @click="onPlaylistClick(index)"
-          :key="song.title"
-          :class="{playing:curIndex==index}"
-        >
-          <span class="index">{{index+1}}.</span>
-          {{ song.author }} - {{ song.title }}
-        </li>
-        <li>Lorem, ipsum dolor.</li>
-        <li>Voluptatum, minima iusto.</li>
-        <li>Suscipit, sequi architecto!</li>
-        <li>Minima, natus possimus.</li>
-        <li>Ipsam, incidunt obcaecati?</li>
-        <li>Iste, quasi est!</li>
-      </ul>
-    </div>
+    <transition name="slide">
+      <lyrics
+        id="lyrics"
+        v-if="show"
+        v-bind:timestamp="currentTime"
+        :currentMusicIndex="curIndex"
+        :offset="offset"
+        :touching="touching"
+        @updateTimestampByLyrics="updateTimestamp"
+      ></lyrics>
+    </transition>
   </div>
 </template>
 
 <script>
+import Option from "./Option.vue";
+import Lyrics from "./Lyrics";
 export default {
+  components: {
+    Option,
+    Lyrics
+  },
   data() {
     return {
       all: 0,
@@ -113,7 +121,9 @@ export default {
       x: 0,
       y: 0,
       showPlaylist: false,
-      show: false
+      show: false,
+      offset: 0,
+      touching: false
     };
   },
   mounted() {
@@ -130,26 +140,19 @@ export default {
     this.loadingStyle.top = cover.offsetTop + "px";
     this.loadingStyle.lineHeight = this.coverWidth + "px";
 
-    // for touch event
-    window.addEventListener("touchstart", this.onTouchStart);
-    window.addEventListener("touchmove", this.onTouchMove);
-    window.addEventListener("touchend", this.onTouchEnd);
-
     // player initiating
     this.cur.src = this.songs[0].url;
   },
   created() {
-    let vm = this;
-    this.handleScroll = function() {
-      setTimeout(function() {
-        vm.onScroll();
-      }, 200);
-    };
-    window.addEventListener("scroll", this.handleScroll, {
-      passive: true
-    });
-    this.coverWidth = Math.min(window.innerWidth, 870) * 0.8;
+    this.coverWidth = window.innerWidth * 0.8;
     this.coverHeight = this.coverWidth;
+
+    // for touch event
+    window.addEventListener("touchstart", this.onTouchStart, {
+      passive: false
+    });
+    window.addEventListener("touchmove", this.onTouchMove, { passive: false });
+    window.addEventListener("touchend", this.onTouchEnd);
   },
   beforeDestroy() {
     window.removeEventListener("scroll", this.handleScroll);
@@ -184,6 +187,15 @@ export default {
       };
       this.song.addEventListener("canplay", onPlay);
     },
+    togglePlaylist() {
+      this.showPlaylist = !this.showPlaylist;
+      let vm = this;
+      let closePlaylist = function() {
+        vm.showPlaylist = false;
+        window.removeEventListener("click", closePlaylist);
+      };
+      window.addEventListener("click", closePlaylist);
+    },
     play() {
       let vm = this;
 
@@ -196,8 +208,6 @@ export default {
 
       this.timer = setInterval(function() {
         vm.currentTime = vm.cur.currentTime;
-        // console.log(vm.currentTime);
-        vm.$emit("updatetimer", vm.currentTime);
       }, 100);
 
       this.cur.addEventListener("ended", this.onNext);
@@ -265,11 +275,16 @@ export default {
       this.cur.currentTime = this.duration * (e.offsetX / this.all);
       this.currentTime = this.cur.currentTime;
       this.prog = this.all * (this.currentTime / this.duration);
+      let vm = this;
+      this.timer = setInterval(function() {
+        vm.currentTime = vm.cur.currentTime;
+      }, 100);
 
       // this.play();
     },
     startDragging() {
       this.dragging = true;
+      clearInterval(this.timer);
     },
     stopDragging(e) {
       if (this.dragging) {
@@ -288,48 +303,64 @@ export default {
       this.startY = e.touches[0].clientY;
       this.x = this.startX;
       this.y = this.startY;
+      this.touching = true;
     },
     onTouchMove: function(e) {
       this.x = e.touches[0].clientX;
       this.y = e.touches[0].clientY;
+      if (this.show === true) {
+        // record the distance that cursor travelled
+        // console.log(e);
+        this.offset = this.y - this.startY;
+      }
     },
     onTouchEnd: function() {
       let swipeX = this.startX - this.x;
       let swipeY = this.startY - this.y;
       let indicator = Math.abs(swipeY) - Math.abs(swipeX);
+      this.touching = false;
       if (indicator > 0) {
         // vertical
         if (swipeY > 0) {
           // swipe up
-          if (swipeY > 0.05 * this.windowHeight) {
-            this.showPlaylist = true;
+          if (swipeY > 0.05 * this.windowHeight && this.show === true) {
+            // this.showPlaylist = true;
           }
         } else {
           // swipe down
-
-          if (swipeY < -0.1 * this.windowHeight || window.scrollY === 0) {
-            this.showPlaylist = false;
+          if (swipeY < -0.1 * this.windowHeight && this.show === true) {
+            // this.showPlaylist = false;
           }
         }
       } else {
         // horizontal
         if (swipeX > 0) {
           // swipe left
+          // console.log("swipe left!");
           if (swipeX > 0.1 * this.windowWidth && !this.showPlaylist) {
-            this.show = false;
+            this.show = true;
           }
         } else {
           // swipe right
+          // console.log("swipe right!");
           if (swipeX < -0.1 * this.windowWidth) {
-            this.show = true;
+            this.show = false;
           }
         }
       }
+    },
+    updateTimestamp(val) {
+      this.cur.currentTime = val;
+      this.currentTime = val;
+      console.log(val);
     }
   },
   watch: {
     currentTime: function() {
       this.prog = this.all * (this.currentTime / this.duration);
+    },
+    curIndex: function() {
+      this.$emit("updateCurIndex", this.songs[this.curIndex].cover);
     }
   },
   filters: {
@@ -348,17 +379,10 @@ export default {
 </script>
 
 <style scoped>
-html,
-body {
-  margin: 0px;
-  padding: 0px;
-  font-size: 14px;
-}
-
 .player-view {
   width: 100%;
-  max-width: 870px;
-  margin: auto;
+  margin: 0;
+  padding: 0;
 }
 
 #player {
@@ -379,6 +403,13 @@ body {
   /* width: 80%; */
   box-shadow: 2px 2px 7px rgba(128, 128, 128, 0.456);
   margin: 10% auto;
+  transition: all 0.2s ease-in-out;
+}
+
+.blur {
+  filter: blur(3rem);
+  position: fixed;
+  transform: scale(3);
 }
 
 .loading {
@@ -398,6 +429,7 @@ span.detail {
   border: 1px solid wheat;
   height: 3px;
   width: 100%;
+  margin: auto;
 }
 
 span.now {
@@ -414,7 +446,6 @@ span.all {
   background-color: wheat;
   height: 3px;
   border-right: 1px solid rosybrown;
-  transition: width 0.1s linear;
 }
 
 .button-container {
@@ -452,54 +483,25 @@ button.prev {
   background-size: 60px 60px;
 }
 
-#playlist {
-  width: 90%;
-  margin: 0px auto;
-  position: relative;
-  /* height: 100vh; */
-  border: 1px wheat solid;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  background-color: rgb(255, 253, 248);
-}
-
-div.dropdown {
-  margin: 10px auto;
-  width: 60px;
-  height: 20px;
-  background: url("../assets/icons/dropdown.svg") no-repeat center left;
-  background-size: 60px 60px;
-}
-
-#playlist h1 {
-  text-align: center;
-}
-
-#playlist ul {
-  text-align: center;
-  list-style: none;
-  padding: 0px;
-}
-
-ul li {
-  cursor: pointer;
-  padding: 10px 0 10px 0px;
-}
-
-span.index {
-  padding-right: 3px;
-}
-
-.playing {
-  background-color: wheat;
-}
-
 #lyrics {
   position: absolute;
   width: 100%;
   left: 0px;
-  top: 0;
+  top: 0px;
   overflow-y: hidden;
+}
+
+/* Lyrics transition */
+.slide-enter,
+.slide-leave-to {
+  transform: translateX(50%);
+  opacity: 0;
+}
+.slide-enter-active {
+  transition: all 0.3s ease;
+}
+.slide-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
 }
 
 /* player transition */
@@ -515,41 +517,17 @@ span.index {
   opacity: 0;
 }
 
-/* playlist transition */
-.down-slide-fade-enter-active {
-  transition: all 0.3s ease;
-}
-.down-slide-fade-leave-active {
-  transition: all 0.3s ease;
-}
-.down-slide-fade-enter, .down-slide-fade-leave-to
-/* .slide-fade-leave-active for below version 2.1.8 */ {
-  transform: translateY(100%);
-  opacity: 0.7;
-}
-
-/* lyrics transition */
-.reverse-slide-fade-enter-active {
-  transition: all 0.4s ease;
-}
-.reverse-slide-fade-leave-active {
-  transition: all 0.3s ease;
-}
-
-.reverse-slide-fade-enter {
-  transform: translateX(80%);
-  opacity: 0;
-}
-.reverse-slide-fade-enter-to {
-  transform: translateX(0);
-}
-
-.reverse-slide-fade-leave {
-  transform: translateX(0);
-}
-.reverse-slide-fade-leave-to {
-  transform: translateX(80%);
-  opacity: 0;
+#option {
+  width: 100%;
+  margin: 0px auto;
+  position: absolute;
+  /* height: 100vh; */
+  border: 1px wheat solid;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  background-color: rgb(255, 253, 248);
+  z-index: 0;
+  bottom: 0px;
 }
 </style>
 
