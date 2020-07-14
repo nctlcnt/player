@@ -20,6 +20,7 @@ body,
 html {
   padding: 0px;
   margin: 0px;
+  overscroll-behavior-y: contain;
 }
 #app {
   text-align: center;

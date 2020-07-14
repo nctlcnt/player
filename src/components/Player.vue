@@ -2,7 +2,7 @@
   <div class="player-view" ref="view">
     <div
       id="player"
-      :style="playerStyle"
+      :style="{left:playerleft}"
       @mousemove="updateProgressDragging"
       @mouseup="stopDragging"
     >
@@ -17,15 +17,21 @@
         :class="{blur:show}"
       />
       <div class="control-container" v-show="!show">
-        <span class="detail">{{songs[curIndex].author}} - {{songs[curIndex].title}}</span>
-        <div id="progress-container" @click="updateProgress" @mousedown.stop="startDragging">
-          <div class="progress" :style="{ width:prog+'px' }" ref="progress"></div>
+        <div class="detail-container">
+          <span class="detail">{{songs[curIndex].title}}</span>
+          <span class="detail" style="color:grey;font-size:0.9rem">{{songs[curIndex].author}}</span>
+        </div>
+        <button class="show-lyrics">show!</button>
+        <div class="progress-bar" @mousedown.stop="startDragging" @click="updateProgress">
+          <div id="progress-container">
+            <div class="progress" :style="{ width:prog+'px' }" ref="progress"></div>
+          </div>
         </div>
         <span class="now">{{ currentTime | timeformatter }}</span>
         <span class="all">{{ duration | timeformatter}}</span>
         <div class="button-container">
           <button class="round prev" @click="prev"></button>
-          <button class="play" v-if="!playing" @click="play"></button>
+          <button class="play" v-if="!playing" v-on:click="play"></button>
           <button class="stop" v-else @click="pause"></button>
           <button class="round next" @click="next"></button>
         </div>
@@ -43,12 +49,13 @@
     <transition name="slide">
       <lyrics
         id="lyrics"
-        v-if="show"
+        v-if="show "
         v-bind:timestamp="currentTime"
         :currentMusicIndex="curIndex"
         :offset="offset"
         :touching="touching"
         @updateTimestampByLyrics="updateTimestamp"
+        :showing="show"
       ></lyrics>
     </transition>
   </div>
@@ -71,6 +78,14 @@ export default {
       duration: 0,
       cur: new Audio(),
       songs: [
+        {
+          song: new Audio(),
+          author: "milet",
+          title: "inside you",
+          cover: "759.jpg",
+          playing: false,
+          url: require("../assets/songs/inside.mp3")
+        },
         {
           song: new Audio(),
           author: "花澤香菜 (はなざわ かな)",
@@ -99,9 +114,6 @@ export default {
       curIndex: 0,
       playing: false,
       isScrolled: false,
-      playerStyle: {
-        opacity: 1
-      },
       dragging: false,
       coverHeight: 0,
       coverWidth: 0,
@@ -144,8 +156,12 @@ export default {
     this.cur.src = this.songs[0].url;
   },
   created() {
-    this.coverWidth = window.innerWidth * 0.8;
+    this.coverWidth = Math.min(window.innerWidth, 570) * 0.9;
     this.coverHeight = this.coverWidth;
+
+    // if (window.innerWidth >= 1140) {
+    //   this.show = true;
+    // }
 
     // for touch event
     window.addEventListener("touchstart", this.onTouchStart, {
@@ -158,13 +174,6 @@ export default {
     window.removeEventListener("scroll", this.handleScroll);
   },
   methods: {
-    onScroll() {
-      if (this.height - window.scrollY >= 0) {
-        this.playerStyle.opacity = (this.height - window.scrollY) / this.height;
-      } else {
-        this.playerStyle.opacity = 0;
-      }
-    },
     onNext() {
       this.prog = this.all;
       this.next();
@@ -198,6 +207,7 @@ export default {
     },
     play() {
       let vm = this;
+      console.log("play");
 
       this.duration = this.cur.duration;
       this.currentTime = this.cur.currentTime;
@@ -303,7 +313,10 @@ export default {
       this.startY = e.touches[0].clientY;
       this.x = this.startX;
       this.y = this.startY;
-      this.touching = true;
+      if (this.show) {
+        this.touching = true;
+      }
+      // console.log("start");
     },
     onTouchMove: function(e) {
       this.x = e.touches[0].clientX;
@@ -313,8 +326,10 @@ export default {
         // console.log(e);
         this.offset = this.y - this.startY;
       }
+      // console.log("moving");
     },
     onTouchEnd: function() {
+      // console.log("up");
       let swipeX = this.startX - this.x;
       let swipeY = this.startY - this.y;
       let indicator = Math.abs(swipeY) - Math.abs(swipeX);
@@ -338,12 +353,14 @@ export default {
           // swipe left
           // console.log("swipe left!");
           if (swipeX > 0.1 * this.windowWidth && !this.showPlaylist) {
+            console.log("swipe left");
             this.show = true;
           }
         } else {
           // swipe right
           // console.log("swipe right!");
           if (swipeX < -0.1 * this.windowWidth) {
+            console.log("swipe right");
             this.show = false;
           }
         }
@@ -352,7 +369,7 @@ export default {
     updateTimestamp(val) {
       this.cur.currentTime = val;
       this.currentTime = val;
-      console.log(val);
+      // console.log(val);
     }
   },
   watch: {
@@ -361,6 +378,11 @@ export default {
     },
     curIndex: function() {
       this.$emit("updateCurIndex", this.songs[this.curIndex].cover);
+    }
+  },
+  computed: {
+    playerleft: function() {
+      return this.windowWidth * 0.05 + "px";
     }
   },
   filters: {
@@ -380,36 +402,38 @@ export default {
 
 <style scoped>
 .player-view {
-  width: 100%;
+  width: 100vw;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 #player {
+  height: 100%;
   display: block;
-  width: 90%;
-  margin: 0 auto;
-  position: sticky;
+  width: 90vw;
+  position: fixed;
   top: 0px;
-  /* height: 90vh; */
+  left: 5px;
 }
 
 #player header {
-  height: 60px;
+  height: 15%;
 }
 
 .cover {
   display: block;
-  /* width: 80%; */
+  width: 100%;
   box-shadow: 2px 2px 7px rgba(128, 128, 128, 0.456);
-  margin: 10% auto;
-  transition: all 0.2s ease-in-out;
+  /* left: 50%; */
+  /* transform: translateX(-50%); */
+  transition: all 0.3s ease-in-out;
 }
 
 .blur {
-  filter: blur(3rem);
+  filter: blur(2rem);
   position: fixed;
-  transform: scale(3);
+  transform: scale(3) translateY(20%);
 }
 
 .loading {
@@ -419,9 +443,40 @@ export default {
   text-align: center;
 }
 
+.control-container {
+  position: absolute;
+  width: 100%;
+  bottom: 0px;
+}
+
+.control-container img {
+  left: 0px;
+  height: 100%;
+  display: inline-block;
+}
+
+.detail-container {
+  display: inline-block;
+}
 span.detail {
   display: block;
-  margin-top: 30%;
+  line-height: 1.2rem;
+  height: 1.2rem;
+  white-space: nowrap;
+}
+
+button.show-lyrics {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+}
+
+.progress-bar {
+  padding: 0.7rem 0;
+}
+
+.progress-bar:hover #progress-container {
+  background-color: rgba(224, 224, 224, 0.413);
 }
 
 #progress-container {
@@ -450,37 +505,37 @@ span.all {
 
 .button-container {
   width: 90%;
-  margin: 40px auto;
+  margin: 10% auto;
   display: flex;
   justify-content: space-between;
 }
 
 button {
-  height: 60px;
-  width: 60px;
-  margin: 20px 10px;
+  height: 30px;
+  width: 30px;
+  /* margin: 20px 10px; */
   border: none;
   outline: none;
 }
 
 button.play {
   background: url("../assets/icons/play.svg") no-repeat center left;
-  background-size: 60px 60px;
+  background-size: 100%;
 }
 
 button.stop {
   background: url("../assets/icons/pause.svg") no-repeat center left;
-  background-size: 60px 60px;
+  background-size: 100%;
 }
 
 button.next {
   background: url("../assets/icons/next.svg") no-repeat center left;
-  background-size: 60px 60px;
+  background-size: 100%;
 }
 
 button.prev {
   background: url("../assets/icons/back.svg") no-repeat center left;
-  background-size: 60px 60px;
+  background-size: 100%;
 }
 
 #lyrics {
@@ -491,6 +546,16 @@ button.prev {
   overflow-y: hidden;
 }
 
+@media screen and (min-width: 1140px) {
+  #lyrics {
+    position: absolute;
+    width: 50%;
+    right: 0px;
+    top: 0px;
+    overflow-y: hidden;
+  }
+}
+
 /* Lyrics transition */
 .slide-enter,
 .slide-leave-to {
@@ -498,10 +563,10 @@ button.prev {
   opacity: 0;
 }
 .slide-enter-active {
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 .slide-leave-active {
-  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
 }
 
 /* player transition */
@@ -522,9 +587,9 @@ button.prev {
   margin: 0px auto;
   position: absolute;
   /* height: 100vh; */
-  border: 1px wheat solid;
+  /* border: 1px wheat solid; */
   border-radius: 5px;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
   background-color: rgb(255, 253, 248);
   z-index: 0;
   bottom: 0px;
