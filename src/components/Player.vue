@@ -21,7 +21,6 @@
           <span class="detail">{{songs[curIndex].title}}</span>
           <span class="detail" style="color:grey;font-size:0.9rem">{{songs[curIndex].author}}</span>
         </div>
-        <button class="show-lyrics">show!</button>
         <div class="progress-bar" @mousedown.stop="startDragging" @click="updateProgress">
           <div id="progress-container">
             <div class="progress" :style="{ width:prog+'px' }" ref="progress"></div>
@@ -67,7 +66,7 @@ import Lyrics from "./Lyrics";
 export default {
   components: {
     Option,
-    Lyrics
+    Lyrics,
   },
   data() {
     return {
@@ -84,7 +83,7 @@ export default {
           title: "inside you",
           cover: "759.jpg",
           playing: false,
-          url: require("../assets/songs/inside.mp3")
+          url: "https://freesound.org/data/previews/218/218929_2019774-lq.mp3",
         },
         {
           song: new Audio(),
@@ -92,7 +91,7 @@ export default {
           title: "恋愛サーキュレーション (恋爱循环) (《化物语》TV动画片头曲) ",
           cover: "cover3.jpg",
           playing: false,
-          url: require("../assets/songs/123.mp3")
+          url: require("../assets/songs/123.mp3"),
         },
         {
           song: new Audio(),
@@ -100,7 +99,7 @@ export default {
           title: "first love",
           cover: "cover.jpg",
           playing: false,
-          url: require("../assets/songs/Far_memories.mp3")
+          url: require("../assets/songs/Far_memories.mp3"),
         },
         {
           song: new Audio(),
@@ -108,8 +107,8 @@ export default {
           title: "far memories",
           cover: "cover2.jpg",
           playing: false,
-          url: require("../assets/songs/first.mp3")
-        }
+          url: require("../assets/songs/first.mp3"),
+        },
       ],
       curIndex: 0,
       playing: false,
@@ -123,7 +122,7 @@ export default {
         height: 0,
         width: 0,
         top: 0,
-        left: 30 + "px"
+        left: 30 + "px",
       },
       windowHeight: 0,
       windowWidth: 0,
@@ -135,7 +134,7 @@ export default {
       showPlaylist: false,
       show: false,
       offset: 0,
-      touching: false
+      touching: false,
     };
   },
   mounted() {
@@ -165,7 +164,7 @@ export default {
 
     // for touch event
     window.addEventListener("touchstart", this.onTouchStart, {
-      passive: false
+      passive: false,
     });
     window.addEventListener("touchmove", this.onTouchMove, { passive: false });
     window.addEventListener("touchend", this.onTouchEnd);
@@ -189,7 +188,7 @@ export default {
 
       this.song = document.querySelector("audio");
       let vm = this;
-      let onPlay = function() {
+      let onPlay = function () {
         console.log("good to go");
         vm.play();
         vm.song.removeEventListener("canplay", onPlay);
@@ -199,7 +198,7 @@ export default {
     togglePlaylist() {
       this.showPlaylist = !this.showPlaylist;
       let vm = this;
-      let closePlaylist = function() {
+      let closePlaylist = function () {
         vm.showPlaylist = false;
         window.removeEventListener("click", closePlaylist);
       };
@@ -216,7 +215,7 @@ export default {
       this.cur.play();
       this.playing = true;
 
-      this.timer = setInterval(function() {
+      this.timer = setInterval(function () {
         vm.currentTime = vm.cur.currentTime;
       }, 100);
 
@@ -247,7 +246,7 @@ export default {
 
       this.song = document.querySelector("audio");
       let vm = this;
-      let onPlay = function() {
+      let onPlay = function () {
         console.log("good to go");
         vm.play();
         vm.song.removeEventListener("canplay", onPlay);
@@ -272,7 +271,7 @@ export default {
 
       this.song = document.querySelector("audio");
       let vm = this;
-      let onPlay = function() {
+      let onPlay = function () {
         console.log("good to go");
         vm.play();
         vm.song.removeEventListener("canplay", onPlay);
@@ -286,7 +285,7 @@ export default {
       this.currentTime = this.cur.currentTime;
       this.prog = this.all * (this.currentTime / this.duration);
       let vm = this;
-      this.timer = setInterval(function() {
+      this.timer = setInterval(function () {
         vm.currentTime = vm.cur.currentTime;
       }, 100);
 
@@ -308,7 +307,7 @@ export default {
           this.all * ((this.duration * (e.offsetX / this.all)) / this.duration);
       }
     },
-    onTouchStart: function(e) {
+    onTouchStart: function (e) {
       this.startX = e.touches[0].clientX;
       this.startY = e.touches[0].clientY;
       this.x = this.startX;
@@ -318,7 +317,7 @@ export default {
       }
       // console.log("start");
     },
-    onTouchMove: function(e) {
+    onTouchMove: function (e) {
       this.x = e.touches[0].clientX;
       this.y = e.touches[0].clientY;
       if (this.show === true) {
@@ -328,7 +327,7 @@ export default {
       }
       // console.log("moving");
     },
-    onTouchEnd: function() {
+    onTouchEnd: function () {
       // console.log("up");
       let swipeX = this.startX - this.x;
       let swipeY = this.startY - this.y;
@@ -370,23 +369,23 @@ export default {
       this.cur.currentTime = val;
       this.currentTime = val;
       // console.log(val);
-    }
+    },
   },
   watch: {
-    currentTime: function() {
+    currentTime: function () {
       this.prog = this.all * (this.currentTime / this.duration);
     },
-    curIndex: function() {
+    curIndex: function () {
       this.$emit("updateCurIndex", this.songs[this.curIndex].cover);
-    }
+    },
   },
   computed: {
-    playerleft: function() {
+    playerleft: function () {
       return this.windowWidth * 0.05 + "px";
-    }
+    },
   },
   filters: {
-    timeformatter: function(value) {
+    timeformatter: function (value) {
       let hour = 0;
       let min = 0;
       let sec = 0;
@@ -395,8 +394,8 @@ export default {
       min = Math.floor(value / 60);
       sec = Math.floor(value % 60);
       return hour === 0 ? `${min}:${sec}` : `${hour}:${min}:${sec}`;
-    }
-  }
+    },
+  },
 };
 </script>
 
