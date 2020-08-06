@@ -83,7 +83,7 @@ export default {
           title: "inside you",
           cover: "759.jpg",
           playing: false,
-          url: "https://freesound.org/data/previews/218/218929_2019774-lq.mp3",
+          url: require("../assets/songs/inside.mp3"),
         },
         {
           song: new Audio(),
