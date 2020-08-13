@@ -10,8 +10,8 @@ import Player from "./components/Player.vue";
 export default {
   name: "App",
   components: {
-    Player
-  }
+    Player,
+  },
 };
 </script>
 
@@ -28,7 +28,7 @@ html {
   overflow: hidden;
   margin: 0px;
   padding: 0px;
-  max-width: 1000px;
+  max-width: 600px;
 }
 #player {
   position: absolute;

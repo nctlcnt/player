@@ -155,7 +155,7 @@ export default {
     this.cur.src = this.songs[0].url;
   },
   created() {
-    this.coverWidth = Math.min(window.innerWidth, 570) * 0.9;
+    this.coverWidth = Math.min(window.innerWidth, 570) * 0.6;
     this.coverHeight = this.coverWidth;
 
     // if (window.innerWidth >= 1140) {
@@ -417,16 +417,19 @@ export default {
 }
 
 #player header {
-  height: 15%;
+  height: 25%;
 }
 
 .cover {
   display: block;
   width: 100%;
-  box-shadow: 2px 2px 7px rgba(128, 128, 128, 0.456);
+  box-shadow: 2px 2px 7px rgba(71, 144, 207, 0.456);
   /* left: 50%; */
   /* transform: translateX(-50%); */
   transition: all 0.3s ease-in-out;
+  border: none;
+  border-radius: 50%;
+  margin: auto;
 }
 
 .blur {
@@ -445,7 +448,8 @@ export default {
 .control-container {
   position: absolute;
   width: 100%;
-  bottom: 0px;
+  /* bottom: 0px; */
+  padding-top: 20%;
 }
 
 .control-container img {
@@ -474,16 +478,13 @@ button.show-lyrics {
   padding: 0.7rem 0;
 }
 
-.progress-bar:hover #progress-container {
-  background-color: rgba(224, 224, 224, 0.413);
-}
-
 #progress-container {
   background-color: white;
-  border: 1px solid wheat;
   height: 3px;
   width: 100%;
   margin: auto;
+  border: none;
+  box-shadow: 2px 2px 5px rgba(71, 144, 207, 0.456);
 }
 
 span.now {
@@ -497,9 +498,9 @@ span.all {
 }
 
 .progress {
-  background-color: wheat;
+  background-color: rgb(75, 134, 185);
   height: 3px;
-  border-right: 1px solid rosybrown;
+  border-right: 1px solid rgb(196, 196, 196);
 }
 
 .button-container {
