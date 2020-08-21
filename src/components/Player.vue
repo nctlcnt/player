@@ -1,11 +1,6 @@
 <template>
   <div class="player-view" ref="view">
-    <div
-      id="player"
-      :style="{left:playerleft}"
-      @mousemove="updateProgressDragging"
-      @mouseup="stopDragging"
-    >
+    <div id="player" @mousemove="updateProgressDragging" @mouseup="stopDragging">
       <header></header>
       <audio :src="this.songs[this.curIndex].url"></audio>
       <img
@@ -18,8 +13,8 @@
       />
       <div class="control-container" v-show="!show">
         <div class="detail-container">
-          <span class="detail">{{songs[curIndex].title}}</span>
-          <span class="detail" style="color:grey;font-size:0.9rem">{{songs[curIndex].author}}</span>
+          <p class="detail">{{songs[curIndex].title}}</p>
+          <p class="detail" style="color:grey;font-size:0.9rem">{{songs[curIndex].author}}</p>
         </div>
         <div class="progress-bar" @mousedown.stop="startDragging" @click="updateProgress">
           <div id="progress-container">
@@ -93,22 +88,6 @@ export default {
           playing: false,
           url: require("../assets/songs/123.mp3"),
         },
-        {
-          song: new Audio(),
-          author: "Hatamoto Hiro",
-          title: "first love",
-          cover: "cover.jpg",
-          playing: false,
-          url: require("../assets/songs/Far_memories.mp3"),
-        },
-        {
-          song: new Audio(),
-          author: "risou",
-          title: "far memories",
-          cover: "cover2.jpg",
-          playing: false,
-          url: require("../assets/songs/first.mp3"),
-        },
       ],
       curIndex: 0,
       playing: false,
@@ -155,7 +134,7 @@ export default {
     this.cur.src = this.songs[0].url;
   },
   created() {
-    this.coverWidth = Math.min(window.innerWidth, 570) * 0.6;
+    this.coverWidth = Math.min(window.innerWidth, 570) * 0.7;
     this.coverHeight = this.coverWidth;
 
     // if (window.innerWidth >= 1140) {
@@ -400,6 +379,10 @@ export default {
 </script>
 
 <style scoped>
+* {
+  margin: 0px;
+  padding: 0px;
+}
 .player-view {
   width: 100vw;
   margin: 0;
@@ -410,36 +393,36 @@ export default {
 #player {
   height: 100%;
   display: block;
-  width: 90vw;
+  width: 100vw;
   position: fixed;
   top: 0px;
-  left: 5px;
+  /* left: 5px; */
 }
 
 #player header {
-  height: 25%;
+  height: 20%;
 }
 
 .cover {
   display: block;
   width: 100%;
-  box-shadow: 2px 2px 7px rgba(71, 144, 207, 0.456);
+  /* box-shadow: 5px 5px 10px rgba(172, 172, 172, 0.522); */
   /* left: 50%; */
   /* transform: translateX(-50%); */
   transition: all 0.3s ease-in-out;
   border: none;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   margin: auto;
 }
 
 .blur {
   filter: blur(2rem);
-  position: fixed;
+  /* position: fixeßd; */
   transform: scale(3) translateY(20%);
 }
 
 .loading {
-  background-color: rgba(240, 248, 255, 0.311);
+  background-color: rgba(229, 229, 229, 0.311);
   position: absolute;
   font-size: 100px;
   text-align: center;
@@ -461,11 +444,13 @@ export default {
 .detail-container {
   display: inline-block;
 }
-span.detail {
+.detail {
   display: block;
   line-height: 1.2rem;
   height: 1.2rem;
   white-space: nowrap;
+  font-size: 1.3rem;
+  font-weight: 400;
 }
 
 button.show-lyrics {
@@ -475,39 +460,40 @@ button.show-lyrics {
 }
 
 .progress-bar {
-  padding: 0.7rem 0;
+  padding: 0.5rem 0;
 }
 
 #progress-container {
-  background-color: white;
-  height: 3px;
+  background-color: rgba(98, 98, 98, 0.189);
+  height: 2px;
   width: 100%;
   margin: auto;
   border: none;
-  box-shadow: 2px 2px 5px rgba(71, 144, 207, 0.456);
+  /* box-shadow: 2px 2px 5px rgba(98, 98, 98, 0.454); */
 }
 
 span.now {
   position: absolute;
-  left: 0px;
+  left: 1rem;
 }
 
 span.all {
   position: absolute;
-  right: 0px;
+  right: 1rem;
 }
 
 .progress {
-  background-color: rgb(75, 134, 185);
-  height: 3px;
-  border-right: 1px solid rgb(196, 196, 196);
+  background-color: rgb(98, 98, 98);
+  height: 2px;
+  /* border-right: 1px solid rgb(196, 196, 196); */
 }
 
 .button-container {
-  width: 90%;
+  width: 80%;
   margin: 10% auto;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 button {
@@ -521,11 +507,15 @@ button {
 button.play {
   background: url("../assets/icons/play.svg") no-repeat center left;
   background-size: 100%;
+  height: 60px;
+  width: 60px;
 }
 
 button.stop {
   background: url("../assets/icons/pause.svg") no-repeat center left;
   background-size: 100%;
+  height: 60px;
+  width: 60px;
 }
 
 button.next {
