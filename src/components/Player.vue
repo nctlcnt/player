@@ -1,28 +1,49 @@
 <template>
   <div class="player-view" ref="view">
-    <div id="player" @mousemove="updateProgressDragging" @mouseup="stopDragging">
-      <header></header>
+    <div
+      id="player"
+      @mousemove="updateProgressDragging"
+      @mouseup="stopDragging"
+    >
+      <!-- <header></header> -->
       <audio :src="this.songs[this.curIndex].url"></audio>
+
       <img
-        :src="require('../assets/covers/'+this.songs[this.curIndex].cover)"
-        :style="{height:coverHeight+'px',width:coverWidth+'px'}"
+        :src="require('../assets/covers/' + this.songs[this.curIndex].cover)"
         alt="cover"
         class="cover"
         @click.stop="togglePlaylist"
-        :class="{blur:show}"
+        :class="{ blur: show }"
+        ref="coverImg"
       />
       <div class="control-container" v-show="!show">
-        <div class="detail-container">
-          <p class="detail">{{songs[curIndex].title}}</p>
-          <p class="detail" style="color:grey;font-size:0.9rem">{{songs[curIndex].author}}</p>
-        </div>
-        <div class="progress-bar" @mousedown.stop="startDragging" @click="updateProgress">
+        <div
+          class="progress-bar"
+          @mousedown.stop="startDragging"
+          @click="updateProgress"
+        >
           <div id="progress-container">
-            <div class="progress" :style="{ width:prog+'px' }" ref="progress"></div>
+            <div
+              class="progress"
+              :style="{ width: prog + 'px' }"
+              ref="progress"
+            ></div>
           </div>
         </div>
         <span class="now">{{ currentTime | timeformatter }}</span>
-        <span class="all">{{ duration | timeformatter}}</span>
+        <span class="all">{{ duration | timeformatter }}</span>
+        <div class="detail-container">
+          <p
+            class="detail"
+            style="font-weight: bold; margin-bottom: 22px; margin-top: 20px"
+          >
+            {{ songs[curIndex].title }}
+          </p>
+          <p class="detail" style="color: #666; font-size: 1.1rem">
+            {{ songs[curIndex].author }}
+          </p>
+        </div>
+
         <div class="button-container">
           <button class="round prev" @click="prev"></button>
           <button class="play" v-if="!playing" v-on:click="play"></button>
@@ -43,7 +64,7 @@
     <transition name="slide">
       <lyrics
         id="lyrics"
-        v-if="show "
+        v-if="show"
         v-bind:timestamp="currentTime"
         :currentMusicIndex="curIndex"
         :offset="offset"
@@ -58,6 +79,9 @@
 <script>
 import Option from "./Option.vue";
 import Lyrics from "./Lyrics";
+
+import ColorThief from "colorthief";
+
 export default {
   components: {
     Option,
@@ -75,8 +99,8 @@ export default {
         {
           song: new Audio(),
           author: "milet",
-          title: "inside you",
-          cover: "759.jpg",
+          title: "Inside You",
+          cover: "cover.jpg",
           playing: false,
           url: require("../assets/songs/inside.mp3"),
         },
@@ -114,6 +138,8 @@ export default {
       show: false,
       offset: 0,
       touching: false,
+
+      backgroundImg: "",
     };
   },
   mounted() {
@@ -132,6 +158,10 @@ export default {
 
     // player initiating
     this.cur.src = this.songs[0].url;
+
+    const colorThief = new ColorThief();
+    const color = colorThief.getPalette(this.$refs.coverImg);
+    console.log(color);
   },
   created() {
     this.coverWidth = Math.min(window.innerWidth, 570) * 0.7;
@@ -397,6 +427,8 @@ export default {
   position: fixed;
   top: 0px;
   /* left: 5px; */
+  background-color: white;
+  overflow: hidden;
 }
 
 #player header {
@@ -405,20 +437,26 @@ export default {
 
 .cover {
   display: block;
-  width: 100%;
+  /* width: 100%; */
   /* box-shadow: 5px 5px 10px rgba(172, 172, 172, 0.522); */
-  /* left: 50%; */
-  /* transform: translateX(-50%); */
+  left: 50%;
+  transform: translateX(-50%);
   transition: all 0.3s ease-in-out;
   border: none;
   /* border-radius: 50%; */
   margin: auto;
+  top: 0px;
+  position: relative;
+  height: 100vw;
+  width: auto;
 }
 
 .blur {
+  /* height: 100% !important;
+  width: auto !important; */
   filter: blur(2rem);
   /* position: fixeßd; */
-  transform: scale(3) translateY(20%);
+  /* transform: scale(3) translateY(20%); */
 }
 
 .loading {
@@ -429,10 +467,10 @@ export default {
 }
 
 .control-container {
-  position: absolute;
+  /* position: absolute; */
   width: 100%;
   /* bottom: 0px; */
-  padding-top: 20%;
+  /* padding-top: 20%; */
 }
 
 .control-container img {
@@ -443,13 +481,14 @@ export default {
 
 .detail-container {
   display: inline-block;
+  margin-top: 30px;
 }
 .detail {
   display: block;
   line-height: 1.2rem;
   height: 1.2rem;
   white-space: nowrap;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 400;
 }
 
@@ -460,16 +499,22 @@ button.show-lyrics {
 }
 
 .progress-bar {
-  padding: 0.5rem 0;
+  /* padding: 0.5rem 0; */
+  position: relative;
+  top: -6px;
 }
 
 #progress-container {
-  background-color: rgba(98, 98, 98, 0.189);
-  height: 2px;
+  background-color: #ececec17;
+  height: 6px;
   width: 100%;
   margin: auto;
   border: none;
-  /* box-shadow: 2px 2px 5px rgba(98, 98, 98, 0.454); */
+  box-shadow: 0px 1px 7px 0px rgba(98, 98, 98, 0.34);
+  position: relative;
+  height: 100vw;
+  top: 0px;
+  position: fixed;
 }
 
 span.now {
@@ -483,9 +528,12 @@ span.all {
 }
 
 .progress {
-  background-color: rgb(98, 98, 98);
-  height: 2px;
+  background-color: rgb(255 255 255 / 30%);
+  /* height: 6px; */
+  position: absolute;
   /* border-right: 1px solid rgb(196, 196, 196); */
+  top: 0px;
+  height: 100%;
 }
 
 .button-container {

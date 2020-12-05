@@ -29,6 +29,7 @@ html {
   margin: 0px;
   padding: 0px;
   max-width: 600px;
+  background-color: black;
 }
 #player {
   position: absolute;
