@@ -4,19 +4,18 @@
       id="player"
       @mousemove="updateProgressDragging"
       @mouseup="stopDragging"
+      :class="{ maxWidth: isPC }"
     >
       <!-- <header></header> -->
       <audio :src="this.songs[this.curIndex].url"></audio>
-
-      <img
-        :src="require('../assets/covers/' + this.songs[this.curIndex].cover)"
-        alt="cover"
+      <div
         class="cover"
-        @click.stop="togglePlaylist"
+        :style="{
+          background: `url(${require('../assets/covers/' +
+            songs[curIndex].cover)})`,
+        }"
         :class="{ blur: show }"
-        ref="coverImg"
-      />
-      <div class="control-container" v-show="!show">
+      >
         <div
           class="progress-bar"
           @mousedown.stop="startDragging"
@@ -30,6 +29,15 @@
             ></div>
           </div>
         </div>
+      </div>
+      <!-- <img
+        :src="require('../assets/covers/' + this.songs[this.curIndex].cover)"
+        alt="cover"
+        class="cover"
+        :class="{ blur: show }"
+        ref="coverImg"
+      /> -->
+      <div class="control-container" v-show="!show">
         <span class="now">{{ currentTime | timeformatter }}</span>
         <span class="all">{{ duration | timeformatter }}</span>
         <div class="detail-container">
@@ -60,17 +68,16 @@
       v-bind:current="curIndex"
       :touching="touching"
     ></Option>
-
     <transition name="slide">
       <lyrics
         id="lyrics"
-        v-if="show"
+        v-if="show || isPC"
         v-bind:timestamp="currentTime"
         :currentMusicIndex="curIndex"
-        :offset="offset"
         :touching="touching"
         @updateTimestampByLyrics="updateTimestamp"
         :showing="show"
+        :class="{ alignRight: isPC }"
       ></lyrics>
     </transition>
   </div>
@@ -79,8 +86,6 @@
 <script>
 import Option from "./Option.vue";
 import Lyrics from "./Lyrics";
-
-import ColorThief from "colorthief";
 
 export default {
   components: {
@@ -129,6 +134,7 @@ export default {
       },
       windowHeight: 0,
       windowWidth: 0,
+      isPC: false,
       // touch event
       startX: 0,
       startY: 0,
@@ -143,25 +149,26 @@ export default {
     };
   },
   mounted() {
-    this.all = document.getElementById("progress-container").clientWidth;
     this.windowHeight = window.innerHeight;
     this.windowWidth = window.innerWidth;
+    if (this.windowWidth > 800) {
+      this.isPC = true;
+    }
     this.height = this.windowHeight / 1.5;
 
     // the loading filter
-    let cover = document.querySelector("img.cover");
+    // let cover = document.querySelector("img.cover");
     this.loadingStyle.width = this.coverWidth + "px";
     this.loadingStyle.height = this.coverWidth + "px";
-    this.loadingStyle.left = cover.offsetLeft + "px";
-    this.loadingStyle.top = cover.offsetTop + "px";
+    // this.loadingStyle.left = cover.offsetLeft + "px";
+    // this.loadingStyle.top = cover.offsetTop + "px";
     this.loadingStyle.lineHeight = this.coverWidth + "px";
 
     // player initiating
     this.cur.src = this.songs[0].url;
-
-    const colorThief = new ColorThief();
-    const color = colorThief.getPalette(this.$refs.coverImg);
-    console.log(color);
+    setTimeout(() => {
+      this.getProgressBarWidth();
+    });
   },
   created() {
     this.coverWidth = Math.min(window.innerWidth, 570) * 0.7;
@@ -185,6 +192,10 @@ export default {
     onNext() {
       this.prog = this.all;
       this.next();
+    },
+    getProgressBarWidth() {
+      this.all = document.getElementById("progress-container").clientWidth;
+      console.log(this.all);
     },
     onPlaylistClick(index) {
       if (this.curIndex === index) return;
@@ -305,6 +316,7 @@ export default {
       clearInterval(this.timer);
     },
     stopDragging(e) {
+      console.log(e);
       if (this.dragging) {
         this.dragging = false;
         this.updateProgress(e);
@@ -429,6 +441,11 @@ export default {
   /* left: 5px; */
   background-color: white;
   overflow: hidden;
+  /* max-width: 500px; */
+}
+
+.maxWidth {
+  max-width: 40%;
 }
 
 #player header {
@@ -437,26 +454,22 @@ export default {
 
 .cover {
   display: block;
-  /* width: 100%; */
-  /* box-shadow: 5px 5px 10px rgba(172, 172, 172, 0.522); */
-  left: 50%;
-  transform: translateX(-50%);
   transition: all 0.3s ease-in-out;
   border: none;
-  /* border-radius: 50%; */
   margin: auto;
-  top: 0px;
+  width: 100%;
+  padding-bottom: 100%;
+  background-size: cover !important;
   position: relative;
-  height: 100vw;
-  width: auto;
 }
 
 .blur {
   /* height: 100% !important;
   width: auto !important; */
-  filter: blur(2rem);
+  /* height: 100%; */
   /* position: fixeßd; */
-  /* transform: scale(3) translateY(20%); */
+  transform: scale(3) translateY(20%);
+  filter: blur(2rem);
 }
 
 .loading {
@@ -499,22 +512,24 @@ button.show-lyrics {
 }
 
 .progress-bar {
-  /* padding: 0.5rem 0; */
-  position: relative;
-  top: -6px;
+  height: 100%;
+  width: 100%;
 }
 
 #progress-container {
   background-color: #ececec17;
-  height: 6px;
+  /* height: 6px; */
   width: 100%;
   margin: auto;
   border: none;
   box-shadow: 0px 1px 7px 0px rgba(98, 98, 98, 0.34);
-  position: relative;
-  height: 100vw;
+  /* position: relative; */
+  height: 100%;
   top: 0px;
-  position: fixed;
+  position: absolute;
+  /* position: fixed; */
+  /* max-width: 500px; */
+  /* max-height: 500px; */
 }
 
 span.now {
@@ -584,14 +599,10 @@ button.prev {
   overflow-y: hidden;
 }
 
-@media screen and (min-width: 1140px) {
-  #lyrics {
-    position: absolute;
-    width: 50%;
-    right: 0px;
-    top: 0px;
-    overflow-y: hidden;
-  }
+#lyrics.alignRight {
+  width: 60%;
+  right: 0px;
+  left: unset;
 }
 
 /* Lyrics transition */

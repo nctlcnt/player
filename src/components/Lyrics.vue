@@ -6,9 +6,9 @@
         v-for="(l, i) in lyricArray"
         :key="i"
         :class="{
-          highlight: i===curIndex
+          highlight: i === curIndex,
         }"
-        :style="{opacity:Math.max(1-(curIndex-i)*0.3,0)}"
+        :style="{ opacity: Math.max(1 - (curIndex - i) * 0.3, 0) }"
       >
         <span>{{ l }}</span>
       </li>
@@ -35,7 +35,7 @@ export default {
       curIndex: 0,
       scrollDis: 0,
       timeout: null,
-      offset: 0
+      offset: 0,
     };
   },
   mounted() {
@@ -52,7 +52,7 @@ export default {
       }
     }
     let vm = this;
-    setTimeout(function() {
+    setTimeout(function () {
       // console.log(document.querySelector("#lyrics").scrollHeight);
       // console.log(vm.curIndex);
       window.scrollTo(0, vm.curIndex * 48);
@@ -111,33 +111,34 @@ export default {
           // console.log(vm.chosenTimestamp);
         }
       }, 200);
-    }
+    },
   },
   watch: {
-    timestamp: function() {
+    timestamp: function () {
       // console.log(this.timestamp);
       this.timer = this.timestamp;
       // console.log(this.timer);
+      // console.log(this.offset);
+
       if (
         this.timer + 0.2 > this.timeArray[this.curIndex + 1] &&
         this.timer + 0.2 < this.timeArray[this.curIndex + 2]
       ) {
         // go to next line
         this.curIndex++;
-        // console.log(this.curIndex);
         window.scrollBy({
           top: 48,
           left: 0,
-          behavior: "smooth"
+          behavior: "smooth",
         });
       }
     },
-    currentMusicIndex: function() {
+    currentMusicIndex: function () {
       // change song
       this.curIndex = 0;
       window.scrollTo(0, 0);
     },
-    offset: function() {
+    offset: function () {
       this.off = Math.round(this.offset / 48);
       if (this.prevIndex + this.off < 0) {
         this.curIndex = 0;
@@ -147,17 +148,17 @@ export default {
         this.curIndex = this.prevIndex + this.off;
       }
     },
-    touching: function() {
+    touching: function () {
       if (this.touching) {
-        // console.log("touching");
+        console.log("touching");
         this.prevPosition = window.scrollY;
         this.prevIndex = this.curIndex;
         window.addEventListener("scroll", this.onScroll);
       } else {
         // console.log("stoptouching");
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -193,10 +194,11 @@ span {
 }
 
 .highlight {
-  color: white;
+  color: rgb(255, 255, 255);
   font-size: 1.3rem;
   height: 6rem;
   line-height: 6rem;
+  text-shadow: 1px 1px 2px rgb(138, 138, 138);
 }
 
 .highlight span {
